@@ -1,0 +1,15 @@
+# Python 3.13.x — versions verified during Stage 2 install on this machine.
+# Install:  .\.venv\Scripts\python -m pip install -r backend\requirements.txt
+
+fastapi==0.128.0
+uvicorn[standard]==0.40.0
+pydantic==2.12.3
+pydantic-settings==2.11.0
+sqlalchemy==2.0.44
+alembic==1.17.2
+psycopg[binary]==3.2.12
+python-dotenv==1.2.1
+httpx==0.28.1
+pytest==8.4.2
+starlette==0.48.0
+pwdlib[argon2]==0.3.1
