@@ -3,8 +3,10 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import DBAPIError, OperationalError
 
 from app.api.routes.admin import router as admin_router
 from app.api.routes.auth import router as auth_router
@@ -41,13 +43,44 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+
+    # Compile allowed origins
+    allowed_origins = {
+        settings.frontend_origin.rstrip("/"),
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://trust-vault-blond.vercel.app",
+    }
+    if "," in settings.frontend_origin:
+        for org in settings.frontend_origin.split(","):
+            if org.strip():
+                allowed_origins.add(org.strip().rstrip("/"))
+
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.frontend_origin],
+        allow_origins=list(allowed_origins),
+        allow_origin_regex=r"https://.*\.vercel\.app",
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Request-ID"],
     )
+
+    @application.exception_handler(OperationalError)
+    @application.exception_handler(DBAPIError)
+    async def database_exception_handler(_request: Request, exc: Exception):
+        logger.error("Database connectivity error: %s", exc)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={
+                "detail": "Database connection is temporarily unavailable. Please verify DATABASE_URL and database connectivity."
+            },
+        )
+
+    @application.get("/", tags=["health"])
+    def root() -> dict[str, str]:
+        """Root probe for Render and load-balancer health checks."""
+        return {"status": "ok", "service": "trustvault-api", "version": "0.1.0"}
+
     application.include_router(health_router)
     application.include_router(auth_router)
     application.include_router(documents_router)

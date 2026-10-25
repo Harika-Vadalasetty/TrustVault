@@ -50,11 +50,24 @@ class Settings(BaseSettings):
 
     log_level: str = Field(default="INFO")
 
-    @field_validator("database_url", "supabase_url", "supabase_service_role_key", "session_secret", "demo_password", "smtp_host", "smtp_username", "smtp_password", mode="before")
+    @field_validator(
+        "database_url",
+        "supabase_url",
+        "supabase_service_role_key",
+        "session_secret",
+        "demo_password",
+        "smtp_host",
+        "smtp_username",
+        "smtp_password",
+        mode="before",
+    )
     @classmethod
     def empty_string_to_none(cls, value: object) -> object:
-        if isinstance(value, str) and value.strip() == "":
-            return None
+        if isinstance(value, str):
+            cleaned = value.strip().strip("'\"")
+            if cleaned == "":
+                return None
+            return cleaned
         return value
 
     @property
@@ -95,11 +108,17 @@ class Settings(BaseSettings):
 
     def sqlalchemy_url(self) -> str:
         """Return a SQLAlchemy URL using the psycopg (v3) driver."""
-        url = self.require_database_url()
+        url = self.require_database_url().strip().strip("'\"")
         if url.startswith("postgresql://"):
-            return "postgresql+psycopg://" + url[len("postgresql://") :]
-        if url.startswith("postgres://"):
-            return "postgresql+psycopg://" + url[len("postgres://") :]
+            url = "postgresql+psycopg://" + url[len("postgresql://") :]
+        elif url.startswith("postgres://"):
+            url = "postgresql+psycopg://" + url[len("postgres://") :]
+
+        # Enforce SSL for remote PostgreSQL hosts (e.g. Supabase, Render, AWS RDS)
+        if "sslmode" not in url and ("supabase" in url or "amazonaws" in url or "render" in url or "pooler" in url):
+            sep = "&" if "?" in url else "?"
+            url = f"{url}{sep}sslmode=require"
+
         return url
 
 

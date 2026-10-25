@@ -107,14 +107,21 @@ async function request<T>(
   if (!response.ok) {
     let errorDetail = `Request failed with status ${response.status}`;
     try {
-      const errorJson = await response.json();
-      if (errorJson.detail) {
-        errorDetail = Array.isArray(errorJson.detail)
-          ? errorJson.detail.map((d: { msg?: string }) => d.msg || JSON.stringify(d)).join(', ')
-          : String(errorJson.detail);
+      const text = await response.text();
+      try {
+        const errorJson = JSON.parse(text);
+        if (errorJson.detail) {
+          errorDetail = Array.isArray(errorJson.detail)
+            ? errorJson.detail.map((d: { msg?: string }) => d.msg || JSON.stringify(d)).join(', ')
+            : String(errorJson.detail);
+        }
+      } catch {
+        if (text && text.trim().length > 0 && text.trim().length < 200) {
+          errorDetail = text.trim();
+        }
       }
     } catch {
-      // Body not JSON
+      // Stream error
     }
     throw new Error(errorDetail);
   }

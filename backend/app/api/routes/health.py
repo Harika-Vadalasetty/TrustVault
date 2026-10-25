@@ -35,9 +35,18 @@ def health_db() -> dict[str, str]:
         )
     try:
         check_database()
-    except Exception:
+    except Exception as exc:
+        err_type = type(exc).__name__
+        err_msg = str(exc)
+        if settings.database_url and "@" in settings.database_url:
+            try:
+                pass_part = settings.database_url.split("@")[0].split(":")[-1]
+                if pass_part and len(pass_part) > 2:
+                    err_msg = err_msg.replace(pass_part, "******")
+            except Exception:
+                pass
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Database is configured but the connection check failed.",
+            detail=f"Database is configured but the connection check failed ({err_type}): {err_msg[:120]}",
         ) from None
     return {"status": "ok", "database": "reachable"}
