@@ -137,18 +137,31 @@ export default function App() {
     }
   }
 
-  async function verifyAuth() {
-    try {
-      setLoadingSession(true);
-      const res = await api.auth.getMe();
-      setUser(res.user);
-      routeToDefaultTab(res.user.role);
-    } catch {
-      setUser(null);
-    } finally {
-      setLoadingSession(false);
-    }
+
+async function verifyAuth() {
+  setLoadingSession(true);
+
+  try {
+    const res = await Promise.race([
+      api.auth.getMe(),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Session check timed out")),
+          5000
+        )
+      ),
+    ]);
+
+    setUser(res.user);
+    routeToDefaultTab(res.user.role);
+  } catch {
+    setUser(null);
+  } finally {
+    setLoadingSession(false);
   }
+}
+ 
+
 
   function routeToDefaultTab(role: UserRole) {
     if (role === 'ADMIN') {
