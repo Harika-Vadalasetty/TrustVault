@@ -120,7 +120,7 @@ docker compose up --build
 
 #### 2. Backend Setup
 ```powershell
-Set-Location "C:\Users\BHARGAVI\TrustVault\backend"
+Set-Location "backend"
 
 # Activate virtual environment
 ..\.venv\Scripts\Activate.ps1
@@ -138,7 +138,7 @@ uvicorn app.main:app --reload --port 8000
 
 #### 3. Frontend Setup
 ```powershell
-Set-Location "C:\Users\BHARGAVI\TrustVault\frontend"
+Set-Location "frontend"
 npm install
 npm run dev
 ```
@@ -163,14 +163,14 @@ Open **`http://localhost:5173`** in your browser.
 The entire codebase is verified by an automated test suite containing **60 integration and unit tests**:
 
 ```powershell
-Set-Location "C:\Users\BHARGAVI\TrustVault\backend"
+Set-Location "backend"
 ..\.venv\Scripts\python.exe -m pytest -v
 ```
 
 ```text
 ============================= test session starts =============================
 platform win32 -- Python 3.13.14, pytest-8.4.2, pluggy-1.7.0
-rootdir: C:\Users\BHARGAVI\TrustVault\backend
+rootdir: backend
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.15.1
@@ -188,7 +188,7 @@ tests/test_session.py (17 tests) .................................... PASSED
 
 Frontend production compilation:
 ```powershell
-Set-Location "C:\Users\BHARGAVI\TrustVault\frontend"
+Set-Location "frontend"
 npm run build
 ```
 ```text
