@@ -6,6 +6,7 @@ migrations, /health/db, and later features call require_* helpers and
 fail with a clear error if those values are missing.
 """
 
+import re
 from functools import lru_cache
 
 from pydantic import Field, field_validator
@@ -109,6 +110,19 @@ class Settings(BaseSettings):
     def sqlalchemy_url(self) -> str:
         """Return a SQLAlchemy URL using the psycopg (v3) driver."""
         url = self.require_database_url().strip().strip("'\"")
+
+        # Resolve Supabase direct connection IPv6 issue on cloud platforms without IPv6 (such as Render free tier).
+        # Direct hostname "db.<ref>.supabase.co" has no IPv4 A-record, causing "[Errno -2] Name or service not known".
+        # Automatically bridge direct connections to the IPv4-compatible Supabase Pooler.
+        supabase_match = re.search(r"@db\.([a-z0-9_-]+)\.supabase\.co(?::\d+)?", url)
+        if supabase_match:
+            project_ref = supabase_match.group(1)
+            # Default pooler host for ap-south-1 Supabase instance
+            pooler_host = "aws-0-ap-south-1.pooler.supabase.com:5432"
+            url = re.sub(r"@db\.[a-z0-9_-]+\.supabase\.co(?::\d+)?", f"@{pooler_host}", url)
+            if "://postgres:" in url:
+                url = url.replace("://postgres:", f"://postgres.{project_ref}:")
+
         if url.startswith("postgresql://"):
             url = "postgresql+psycopg://" + url[len("postgresql://") :]
         elif url.startswith("postgres://"):
