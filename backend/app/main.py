@@ -1,4 +1,4 @@
-"""TrustVault FastAPI entrypoint (Stage 2 skeleton)."""
+"""TrustVault FastAPI entrypoint."""
 
 import logging
 from contextlib import asynccontextmanager
@@ -6,6 +6,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.admin import router as admin_router
+from app.api.routes.auth import router as auth_router
+from app.api.routes.documents import router as documents_router
 from app.api.routes.health import router as health_router
 from app.config import get_settings
 
@@ -22,7 +25,7 @@ async def lifespan(_app: FastAPI):
     if not settings.storage_configured:
         pending.append("SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (needed from Stage 4 for file storage)")
     if not settings.session_secret:
-        pending.append("SESSION_SECRET (needed from Stage 3 for authentication)")
+        pending.append("SESSION_SECRET (needed for authentication and sessions)")
     if pending:
         logger.warning("Starting without complete runtime config: %s", "; ".join(pending))
     else:
@@ -46,6 +49,9 @@ def create_app() -> FastAPI:
         allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Request-ID"],
     )
     application.include_router(health_router)
+    application.include_router(auth_router)
+    application.include_router(documents_router)
+    application.include_router(admin_router)
     return application
 
 

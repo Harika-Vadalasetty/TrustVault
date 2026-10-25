@@ -37,12 +37,20 @@ class Settings(BaseSettings):
 
     max_upload_bytes: int = 10 * 1024 * 1024
     allowed_extensions: str = "pdf,png,jpg,jpeg,docx,txt"
+    storage_dir: str = "storage_local"
 
     demo_password: str | None = None
 
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str = "noreply@trustvault.local"
+    smtp_use_tls: bool = True
+
     log_level: str = Field(default="INFO")
 
-    @field_validator("database_url", "supabase_url", "supabase_service_role_key", "session_secret", "demo_password", mode="before")
+    @field_validator("database_url", "supabase_url", "supabase_service_role_key", "session_secret", "demo_password", "smtp_host", "smtp_username", "smtp_password", mode="before")
     @classmethod
     def empty_string_to_none(cls, value: object) -> object:
         if isinstance(value, str) and value.strip() == "":
@@ -61,6 +69,10 @@ class Settings(BaseSettings):
     def storage_configured(self) -> bool:
         return bool(self.supabase_url and self.supabase_service_role_key)
 
+    @property
+    def email_configured(self) -> bool:
+        return bool(self.smtp_host and self.smtp_username)
+
     def require_database_url(self) -> str:
         if not self.database_url:
             raise RuntimeError(
@@ -68,6 +80,18 @@ class Settings(BaseSettings):
                 "Supabase PostgreSQL URI before running migrations or DB features."
             )
         return self.database_url
+
+    def require_session_secret(self) -> str:
+        if not self.session_secret:
+            raise RuntimeError(
+                "SESSION_SECRET is not configured. Set SESSION_SECRET in your environment "
+                "or .env file before using session or CSRF features."
+            )
+        if len(self.session_secret) < 32:
+            raise ValueError(
+                "SESSION_SECRET must be at least 32 characters long."
+            )
+        return self.session_secret
 
     def sqlalchemy_url(self) -> str:
         """Return a SQLAlchemy URL using the psycopg (v3) driver."""

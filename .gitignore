@@ -24,6 +24,8 @@ build/
 *.sqlite
 *.sqlite3
 storage_local/
+*.zip
+package_project.py
 
 # Frontend (Stage 8+)
 frontend/node_modules/
