@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/auth/(.*)", "destination": "https://trustvault-backend.onrender.com/auth/$1" },
+    { "source": "/documents/(.*)", "destination": "https://trustvault-backend.onrender.com/documents/$1" },
+    { "source": "/documents", "destination": "https://trustvault-backend.onrender.com/documents" },
+    { "source": "/admin/(.*)", "destination": "https://trustvault-backend.onrender.com/admin/$1" },
+    { "source": "/audit-logs", "destination": "https://trustvault-backend.onrender.com/audit-logs" },
+    { "source": "/health", "destination": "https://trustvault-backend.onrender.com/health" }
+  ]
+}

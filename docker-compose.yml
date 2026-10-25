@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - FRONTEND_ORIGIN=http://localhost:5173
+      - SESSION_SECRET=trustvault-dev-insecure-change-in-prod-secret-32chars
+      - SESSION_TTL_MINUTES=480
+      - COOKIE_SECURE=false
+      - COOKIE_SAMESITE=lax
+      - MAX_UPLOAD_BYTES=10485760
+      - ALLOWED_EXTENSIONS=pdf,png,jpg,jpeg,docx,txt
+      - STORAGE_DIR=/app/storage_local
+    volumes:
+      - trustvault_storage:/app/storage_local
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  trustvault_storage:

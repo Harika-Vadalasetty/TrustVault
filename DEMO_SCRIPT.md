@@ -1,8 +1,9 @@
 # TrustVault — Hackathon Demo Video Script & Walkthrough
 
-**Challenge:** Snovasys Fresher Hiring Challenge 2026  
 **Project:** TrustVault (Enterprise Secure Document Sharing & Zero-Trust Audit System)  
-**Target Duration:** 2 minutes 30 seconds to 3 minutes  
+**Author:** [Harika Vadalasetty](https://github.com/Harika-Vadalasetty)  
+**Repository:** [https://github.com/Harika-Vadalasetty/TrustVault](https://github.com/Harika-Vadalasetty/TrustVault)  
+**Target Duration:** ~5 Minutes  
 **Format:** Screen recording with voiceover narration  
 
 ---

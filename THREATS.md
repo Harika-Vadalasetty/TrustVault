@@ -1,8 +1,9 @@
 # TrustVault — Threat Model & Security Mitigations
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Target Application:** TrustVault (Enterprise Secure Document Sharing & Zero-Trust Audit System)  
-**Author:** TrustVault Security Engineering  
+**Author:** [Harika Vadalasetty](https://github.com/Harika-Vadalasetty)  
+**Repository:** [https://github.com/Harika-Vadalasetty/TrustVault](https://github.com/Harika-Vadalasetty/TrustVault)
 
 ---
 
@@ -20,6 +21,7 @@ TrustVault enforces a strict, server-side authorization model based on three sys
 | **View All Document Metadata** | ✅ (Compliance oversight) | ❌ (Own only) | ❌ (Shared only) | ❌ |
 | **Download Owned Documents** | ✅ (Own docs only) | ✅ | ❌ | ❌ |
 | **Download Shared Documents** | ❌ (Access forbidden) | ❌ (Access forbidden) | ✅ (While share is active) | ❌ |
+| **Delete Owned Documents** | ❌ (Own docs only) | ✅ | ❌ | ❌ |
 | **Grant Document Share** | ❌ (Owner only) | ✅ | ❌ | ❌ |
 | **Revoke Document Share** | ❌ (Owner only) | ✅ (Instant termination) | ❌ | ❌ |
 | **View Document Shares** | ✅ | ✅ | ❌ | ❌ |
@@ -27,6 +29,28 @@ TrustVault enforces a strict, server-side authorization model based on three sys
 | **Modify User Roles** | ✅ (Audit logged) | ❌ | ❌ | ❌ |
 | **View Full Enterprise Audit Trail** | ✅ | ❌ | ❌ | ❌ |
 | **View Scoped Audit Trail** | ✅ (All events) | ✅ (Own docs + personal actions) | ✅ (Personal actions only) | ❌ |
+
+---
+
+## 2. Security Threat & Automated Test Verification Matrix
+
+Each threat vector is guarded by active backend controls and verified by automated integration tests:
+
+| Threat ID | Threat Vector | Implemented Defensive Control | Automated Test Verification |
+|---|---|---|---|
+| **T-01** | Privilege Escalation on Registration | Public endpoint enforces `VIEWER`; rejects role manipulation with HTTP 403 | `tests/test_auth.py::test_attempted_admin_registration_forbidden` |
+| **T-02** | Session Cookie Forgery / Tampering | HMAC-SHA256 signature verification with constant-time comparison | `tests/test_session.py::test_tampered_signature_rejected`<br>`tests/test_dependencies.py::test_tampered_signature_returns_401` |
+| **T-03** | Expired Session Hijacking | Strict timestamp expiration check on `exp` claim | `tests/test_session.py::test_expired_session_rejected`<br>`tests/test_dependencies.py::test_expired_session_cookie_returns_401` |
+| **T-04** | Cross-Site Request Forgery (CSRF) | Session-bound HMAC tokens validated on mutating routes (`POST`, `PATCH`, `DELETE`) | `tests/test_dependencies.py::test_csrf_validation_success_and_failure`<br>`tests/test_session.py::test_csrf_mismatch_rejected` |
+| **T-05** | CSRF Cross-Session Token Reuse | Tokens cryptographically tied to session UUID | `tests/test_session.py::test_csrf_cannot_be_reused_across_sessions` |
+| **T-06** | Insecure Direct Object Reference (IDOR) | Mandatory SQL ownership and active share verification | `tests/test_documents.py::test_another_owner_cannot_access_private_document` |
+| **T-07** | Directory Path Traversal | Files stored by 48-char hex keys; `_resolve_safe_path` sandboxing | `tests/test_documents.py::test_path_traversal_in_filename_sanitized` |
+| **T-08** | Stale Permissions & Delayed Revocation | Immediate timestamp recording; instant database-level access cut-off | `tests/test_documents.py::test_document_sharing_and_immediate_revocation` |
+| **T-09** | Unauthorized Share Delegation | Non-owners blocked from creating or revoking document shares | `tests/test_documents.py::test_non_owner_cannot_create_or_revoke_shares` |
+| **T-10** | Admin Content Snoop (Least Privilege) | Administrators explicitly barred from downloading private user documents | `tests/test_documents.py::test_admin_cannot_download_user_document_contents` |
+| **T-11** | Sole Admin Self-Demotion / Lockout | System prevents last admin from demoting themselves or leaving 0 admins | `tests/test_admin.py::test_admin_cannot_demote_sole_admin` |
+| **T-12** | Audit Trail Tampering / Exposure | Append-only database table; strict user/document scoping | `tests/test_documents.py::test_audit_logs_recording_and_scoping` |
+| **T-13** | File Upload Abuse (Empty / Oversized) | Enforced 10MB ceiling; empty payload rejection | `tests/test_documents.py::test_empty_file_upload_rejected`<br>`tests/test_documents.py::test_oversized_file_upload_rejected` |
 
 ---
 

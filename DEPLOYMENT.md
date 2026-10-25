@@ -1,16 +1,17 @@
 # TrustVault — Production Deployment Guide & Readiness
 
 **Project:** TrustVault  
-**Challenge:** Snovasys Fresher Hiring Challenge 2026  
-**Status:** Deployment-Ready (Verified Build & Automated Test Suite Passing)  
+**Repository:** [https://github.com/Harika-Vadalasetty/TrustVault](https://github.com/Harika-Vadalasetty/TrustVault)  
+**Author:** [Harika Vadalasetty](https://github.com/Harika-Vadalasetty)  
+**Status:** Deployment-Ready (Verified Build & Automated Test Suite: 60/60 Passing)  
 
 ---
 
 ## 1. Deployment Architecture
 
 TrustVault is designed as a decoupled, modern multi-tier cloud application:
-1. **Frontend Tier:** Single Page Application (SPA) built with React 19, Vite, and Tailwind CSS v4, deployed to **Vercel** or **Netlify**.
-2. **Backend API Tier:** High-performance asynchronous FastAPI service deployed to **Render** or **Railway** (or Docker container).
+1. **Frontend Tier:** Single Page Application (SPA) built with React 19, Vite, and Tailwind CSS v4, deployed to **Vercel**, **Netlify**, or served via containerized NGINX.
+2. **Backend API Tier:** High-performance asynchronous FastAPI service deployed to **Render**, **Railway**, or containerized via Docker.
 3. **Database Tier:** Managed PostgreSQL database hosted on **Supabase** with connection pooling.
 4. **Storage Tier:** Local path-traversal protected persistent disk volume, or private Supabase Storage bucket.
 
@@ -89,7 +90,26 @@ Set the following environment variables in your backend hosting provider (e.g., 
 
 ---
 
-## 4. Verification & Health Probes
+## 4. Containerized Local Deployment (Docker Compose)
+
+TrustVault provides turnkey containerization for local evaluation without needing separate Python or Node environments:
+
+```bash
+# Clone and enter the repository
+git clone https://github.com/Harika-Vadalasetty/TrustVault.git
+cd TrustVault
+
+# Build and start both Backend and Frontend containers
+docker compose up --build
+```
+
+- **Frontend Application:** `http://localhost:5173`
+- **Backend API:** `http://localhost:8000`
+- **Interactive OpenAPI Documentation:** `http://localhost:8000/docs`
+
+---
+
+## 5. Verification & Health Probes
 
 Once deployed:
 1. **Liveness Check:** `GET https://<backend-url>/health` must return `{"status": "ok", "service": "trustvault-api"}`.
@@ -98,12 +118,12 @@ Once deployed:
 
 ---
 
-## 5. Deployment Status & Boundaries
+## 6. Deployment Status & Boundaries
 
 - **Local Verification:**
-  - Backend test suite: **58 passed (100%)**.
-  - Frontend production build: **Successful (`dist/index.html` generated in 895ms)**.
-  - Database schema: **Migrated with all tables in place**.
+  - Backend test suite: **60 passed, 0 failed (100% pass rate)**.
+  - Frontend production build: **Successful (`dist/index.html` compiled with zero errors)**.
+  - Database schema: **Migrated with all tables in place via Alembic**.
 - **Live Cloud Deployment:**
   - A live external deployment requires hosting credentials, provider authentication (e.g. Vercel / Render token), or manual repository linkage on your account.
   - Follow the steps in Section 3 above to link and trigger the automated live build.
